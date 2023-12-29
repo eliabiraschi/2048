@@ -47,8 +47,57 @@
          (vec (for [y (range 4)]
                 (get board (+ y (* x 4))))))))
 
-(defn collapse
-  [line])
+(defn summable-cells?
+  [a b]
+  (= a b))
+
+(defn slideable-cells?
+  [a b]
+  (and (= a 0) (not= b 0)))
+
+(defn cells-stuck?
+  [a b]
+  (or
+   (and (= a 0) (= b 0))
+   (and
+    (not (summable-cells? a b))
+    (not (slideable-cells? a b)))))
+
+(defn line-is-stuck?
+  [line]
+  (loop [line line result true]
+    (let [a (first line)
+          b (second line)]
+      (if (= b nil) result
+          (recur (rest line) (and result (cells-stuck? a b)))))))
+
+(defn collapse-cells
+  [line]
+  (->>
+   (cond
+     (and
+      (summable-cells? (first line) (second line))
+      (summable-cells? (nth line 2) (nth line 3)))
+     [(+ (first line) (second line)) (+ (nth line 2) (nth line 3)) 0 0]
+     (summable-cells? (first line) (second line))
+     [(+ (first line) (second line)) (nth line 2) (nth line 3) 0]
+     (summable-cells? (second line) (nth line 2))
+     [(first line) (+ (second line) (nth line 2)) (nth line 3) 0]
+     (summable-cells? (nth line 2) (nth line 3))
+     [(first line) (second line) (+ (nth line 2) (nth line 3)) 0]
+     :else line)
+   (filter #(not= % 0))
+   ((fn [x] (concat x (repeat 4 0))))
+   (take 4)
+   (vec)))
+
+
+(defn collapse-line
+  [line]
+  (cond
+    (every? #(= 0 %) line) line
+    (line-is-stuck? line) line
+    :else (collapse-cells line)))
 
 (defn -main
   "I don't do a whole lot ... yet."
