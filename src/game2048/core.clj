@@ -35,17 +35,16 @@
   ; TODO do nothing if the input is invalid
   (read-line))
 
-(defn get-columns
-  [board]
-  (vec (for [x (range 4)]
-         (vec (for [y (range 4)]
-                (get board (+ x (* y 4))))))))
+(defn get-columns [board]
+  (let [size (Math/sqrt (count board))]
+    (vec (map (fn [i] (vec (take-nth size (drop i board)))) (range size)))))
 
-(defn get-rows
-  [board]
-  (vec (for [x (range 4)]
-         (vec (for [y (range 4)]
-                (get board (+ y (* x 4))))))))
+
+(defn get-rows [board]
+  (->> board
+       (partition 4)
+       (vec)
+       (map vec)))
 
 (defn summable-cells?
   [a b]
@@ -74,23 +73,18 @@
 (defn collapse-cells
   [line]
   (->>
-   (cond
-     (and
-      (summable-cells? (first line) (second line))
-      (summable-cells? (nth line 2) (nth line 3)))
-     [(+ (first line) (second line)) (+ (nth line 2) (nth line 3)) 0 0]
-     (summable-cells? (first line) (second line))
-     [(+ (first line) (second line)) (nth line 2) (nth line 3) 0]
-     (summable-cells? (second line) (nth line 2))
-     [(first line) (+ (second line) (nth line 2)) (nth line 3) 0]
-     (summable-cells? (nth line 2) (nth line 3))
-     [(first line) (second line) (+ (nth line 2) (nth line 3)) 0]
-     :else line)
+   line
    (filter #(not= % 0))
+   ((fn [x] (loop [line x result []]
+              (let [a (first line)
+                    b (second line)]
+                (if (= b nil) (concat result line)
+                    (if (summable-cells? a b)
+                      (recur (rest (rest line)) (conj result (+ a b)))
+                      (recur (rest line) (conj result a))))))))
    ((fn [x] (concat x (repeat 4 0))))
    (take 4)
    (vec)))
-
 
 (defn collapse-line
   [line]
@@ -99,7 +93,59 @@
     (line-is-stuck? line) line
     :else (collapse-cells line)))
 
+(defn back-collapse-line
+  [line]
+  (cond
+    (every? #(= 0 %) line) line
+    (line-is-stuck? line) line
+    :else (->>
+           (reverse line)
+           (collapse-cells)
+           (reverse)
+           (vec))))
+
+(defn collapse-left
+  [board]
+  (->>
+   (for [line (get-rows board)]
+     (collapse-line line))
+   (flatten)
+   (vec)))
+
+(defn collapse-up
+  [board]
+  (->>
+   (for [line (get-columns board)]
+     (collapse-line line))
+   (apply interleave)
+   (vec)))
+
+(defn collapse-right
+  [board]
+  (->>
+   (for [line (get-rows board)]
+     (back-collapse-line line))
+   (flatten)
+   (vec)))
+
+(defn collapse-down
+  [board]
+  (->>
+   (for [line (get-columns board)]
+     (back-collapse-line line))
+   (apply interleave)
+   (vec)))
+
 (defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
+  []
+  (loop [board (add-tile! (board))]
+    (draw! board)
+    (println "Enter a command (q to quit):")
+    (let [input (handle-input!)]
+      (cond
+        (= input "q") (println "Quitting...")
+        (= input "w") (recur (add-tile! (collapse-up board)))
+        (= input "a") (recur (add-tile! (collapse-left board)))
+        (= input "s") (recur (add-tile! (collapse-down board)))
+        (= input "d") (recur (add-tile! (collapse-right board)))
+        :else (do (println "Command recognized:" input) (recur board))))))

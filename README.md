@@ -1,44 +1,21 @@
 # game2048
 
-FIXME: description
+This is my Clojure implementation of the 2048 game.
+It is a simple game where you have to move the tiles in a 4x4 grid to merge them and reach the 2048 tile.
 
-## Installation
-
-Download from http://example.com/FIXME.
+https://en.wikipedia.org/wiki/2048_(video_game)
 
 ## Usage
 
-FIXME: explanation
+Use the `awsd` keys to move the tiles in the grid.
+`q` to quit the game.
 
-    $ java -jar game2048-0.1.0-standalone.jar [args]
+You need hit `Enter` after each command and the visualization of the matrix does not take into account the width of the values so it gets wird.
 
-## Options
+Any other command is it not handled and the game will just go on.
 
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
+There is no check for the game finish, so you have to stop the game when you reach the 2048 tile or when you are not able to move the tiles anymore.
 
 ### Bugs
 
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2023 FIXME
-
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
-
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+Sometimes the tiles do not collapse as expected.
